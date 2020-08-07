@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <title>IPFS in the Browser</title>
+  
+</head>
+<body>
+  <h1>Pubsub Test</h1>
+  <h1 id="status">Node status: offline</h1>
+
+    <p>Most recently received message on pubsub channel:</p>
+    <p id="output">...No messages received yet...</p>
+
+<br>
+
+    <p>Send a message to pubsub channel:</p>
+    <input type="text" id="input">
+    <button type="button" id="send_btn">Send</button>
+  
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/ipfs/dist/index.min.js"></script>
+    <!-- <script src="./node_modules/ipfs/dist/index.min.js"></script> -->
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', async () => {
+        const node = await Ipfs.create({ repo: 'ipfs-' + Math.random() });
+        window.node = node;
+  
+        const status = node.isOnline() ? 'online' : 'offline';
+  
+        console.log(`Node status: `+ status);
+        document.getElementById('status').innerHTML = `Node status: `+status;
+        
+        const topic = 'abcdefg';
+        const receiveMsg = (msg) => (document.getElementById('output').textContent = msg.data.toString());
+        
+        await node.pubsub.subscribe(topic,receiveMsg);
+  
+        document.getElementById('send_btn').addEventListener("click",send_msg);
+        async function send_msg(){
+            //document.getElementById("input").textContent
+            const msg = document.getElementById("input").value
+            
+            await node.pubsub.publish(topic,msg);
+            document.getElementById("input").value = "";
+        }
+  
+      })
+    </script>
+</body>
+</html>
