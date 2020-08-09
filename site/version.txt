@@ -1,5 +1,1 @@
-MajorV:20
-MinorV:0
-Make sure to update this file appropriately for each publishing. Count up in integers.
- Increase "MajorV" when publishing through ENS.
- Increase "MinorV" when publishing through IPNS.
+V:12
