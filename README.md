@@ -2,34 +2,37 @@
 
 # All of this is now outdated, needs to be updated, with some better explanation
 
-## Plan:
-1. Point .eth address to handler.index
-2. Handler shows splashscreen.
-3. Checks a set of .eth sub-domains to load most recent major version of website.
-4. Checks a set of ipns domains to look for most recent minor version, informs to user of this.
-6. Check a set of ipns domains to look for most recent banner message to display.
-5. These check continue at a regular interval.
+## Aim:
+To provide a system for maintaining a decentralised website with decentralised name resoultion.
 
-## Setup
-### Hosting on IPFS:
-Add the folder containing the website to IPFS, call the hash of this folder `HASH_SITE`
-Add the folder containing the packages to IPFS, call the hash of the folder `HASH_PACKAGES`
-Add the folder containing the handler to IPFS, call the hash of the folder `HASH_HANDLER`
-Set the URL in the pointer file to `~~~some gateway~~~/ipfs/HASH_POINTER`
-Add the pointer file to IPFS and let the hash be `HASH_POINTER`
+## How it works
+Versions of the site are hosted on IPFS, later versions having higher version numbers.
+In practice this means that there is a version.txt file in the home directory of the site, which on its first line has:
+`V:n` where n is the version number of the site.
 
-Do the last 3 each time you update the site, and choose if 'Setting ENS' or 'Setting IPNS' is appropriate.
+The user navigates to an ENS domain, let this be `x.eth`. For Web3.0 access this is `x.eth`, for Web2.0 its `x.eth.link`. This resolves to a file called `pointer.html`, which points to another site called `handler.html`.
+`handler.html` load a 'major' version of the site from its `major_url` path into a full page iframe allowing the visitor to have recent access to a mostly up-to-date site instantly. The handler then periodically checks a pair of IPNS paths to see if a newer 'minor' version of the site is available. If so, that site is loaded.
 
-### Setting up ENS (.eth):
-Acquire an .eth domain, let this be `x.eth`.
-Create a set of major version domains, for example `major_a.x.eth` and `major_b.x.eth`. Two are recommended, as when a new major version is being added to one, the other needs to be available as a fallback containing the previous version.
-Major versions will be loaded near instantly. But require an ethereum transaction to update, meaning a small cost.
+## Initial Setup
+1. Install IPFS, testing was done on the go version. Follow official instructions.
+2. Clone this repo to a PC
+3. Use the command `ipfs daemon` in one terminal to start the ipfs daemon.
+4. In a different terminal window, use `ipfs key gen --type=rsa --size=2048 minor_a_IPNS` and `ipfs key gen --type=rsa --size=2048 minor_b_IPNS` to generate two IPNS key for publishing minor version updated site to later. Call these `IPNS_HASH_A` and `IPNS_HASH_B`.
+5. Place your website into the folder `/site` such that its `index.html` is in that folder. Make sure `/site` contains a file called `version.txt` whose first line is: `V:0`.
+6. Use `ipfs add site -r` to add V0 of the site to IPFS. Let the CID (Hash given by IPFS in terminal) for `site` (the folder not the html file inside the folder) be `SITE_HASH`. Example: IPFS will print a line `added QmVs5kp5dz1hjHzqWmChHRRcGQ4zaCbFA9bWJ87YAibWtC site`, the long string is `SITE_HASH`.
+7. In `/handler/handler.js` set `major_url = SITE_HASH` near the top of the file.
+8. In the same file set `minor_a_IPNS = IPNS_HASH_A` and `minor_b_IPNS = IPNS_HASH_B`. Near the top of the file.
+9. Just for initial setup, use `ipfs name publish --key=minor_a_IPNS SITE_HASH` and `ipfs name publish --key=minor_b_IPNS SITE_HASH`, these will each take a minute or two.
+10. Add `/packages` to IPFS with `ipfs add packages -r` and let the hash of the packages folder be `PACKAGES_HASH`
+11. In the file `/handler/index.html` set the `href` on line 9 to `/ipfs/PACKAGES_HASH/bootstrap.min.css`
+12. In the same file set all of line 29, 30 and 31 in a similar way adding the appropriate `PACKAGES_HASH`.
+13. Add `/handler` to IPFS by `ipfs add handler -r`, let the hash of the handler folder be `HANDLER_HASH`.
+14. Set the hash in `pointer.html` to `HANDLER_HASH`.
+15. Add `pointer.html` to IPFS with `ipfs add pointer.html` let the hash of this be `POINTER_HASH`.
+16. Acquire an ENS (.eth) domain and set the content entry to `/ipfs/POINTER_HASH`
 
-Set the content entry for `x.eth` to `HASH_POINTER`
-For `major_a.x.eth` and `major_b.x.eth` set the content entry on one to `HASH_SITE`, when you want to publish a new major version, set the new `HASH_SITE` on alternating subdomains. So one always points to the newest `HASH_SITE` and the other to the one major version out-of-date `HASH_SITE`
+## To Publish major version.
+Make the changes you want to the site folder, Make sure to increase the version in version.txt. Do steps 6,7,13,14,15,16
 
-### Setting up IPNS
-Generate a set of IPFS keys `minor_a` and `minor_b`, publish `HASH_SITE` as an IPNS, of the most recent minor version , alternating the key used as before. So one points to the most recent minor `HASH_SITE` and the other to the one minor version out-of-date `HASH_SITE`.
-
-### Folder Stucture
-All of the published sites should contain a version.txt file containing information about the version of the site that folder contains. See example.
+## To Publish minor version. 
+Make the changes you want to the site folder, Make sure to increase the version in version.txt. Do step 6, do step 9 with only one key. All users who already have the site open will be redirected to the updated version as will new visits
