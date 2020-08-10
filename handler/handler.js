@@ -5,8 +5,8 @@ major_url = "/ipfs/QmVs5kp5dz1hjHzqWmChHRRcGQ4zaCbFA9bWJ87YAibWtC"
 version_loaded = 0
 
 //IPNS version check paths
-minor_a_IPNS = "/ipns/QmdVX9LgTtSJEmhhTXNeuD4hXK7h6BMuZ7ejE1kgry5LZF"
-minor_b_IPNS = "/ipns/QmTgh6zrWecp8T1UbXwDigzgKy77dKZvGgEVnnocW4mZMi"
+minor_a_IPNS = "/ipns/QmYnaYmaMAdoMM1TYcoBzPdfdvcy5HD5NgM1zE6MNEMUA8"
+minor_b_IPNS = "/ipns/QmNT1dKQ7vTodTjDiCZjdh4F1nhArLikLLKUzpWityLdvT"
 minors = [minor_a_IPNS,minor_b_IPNS]
 
 //------------------------------------------------------------------------
@@ -17,7 +17,7 @@ site_screen = document.getElementById("site_screen")
 iframe = document.getElementById("iframe")
 
 //Initial loading screen setup
-is_loading = true;
+is_loading = true
 loading_screen.style.display = 'block'
 site_screen.style.display = 'none'
 
@@ -49,7 +49,10 @@ function resized(){
   }
 }
 
-async function load_latest(url_a,url_b){
+
+
+
+async function load_latest(url_a,url_b,first_load){
   console.log("Started looking at update IPNS paths")
   checked_a = false
   checked_b = false
@@ -111,46 +114,44 @@ async function load_latest(url_a,url_b){
 
   
   function load_latest(){
-    if(true){
-      if(a_version > b_version && a_version > version_loaded){
-        console.log("Chose path A")
-        version_loaded = a_version
-        navigate(url_a)
-      }else if(b_version > a_version && b_version > version_loaded){
-        console.log("Chose path B")
-        version_loaded = b_version
-        navigate(url_b)
-      }else{
-        console.log("No update was found")
-      }
+    if(a_version > b_version && a_version > version_loaded){
+      console.log("Chose path A")
+      version_loaded = a_version
+      suggest_navigate(url_a)
+    }else if(b_version > a_version && b_version > version_loaded){
+      console.log("Chose path B")
+      version_loaded = b_version
+      suggest_navigate(url_b)
     }else{
-      console.log("Not both update paths have been checked")
+      console.log("No update was found")
     }
   }
 
-  function navigate(url){
-    iframe.src = url
-    console.log("Navigating to:"+url)
-    hide_loading()
+  function suggest_navigate(url){
+    if(first_load){
+      iframe.src = url
+      console.log("Navigating to:"+url)
+      hide_loading()
+    }else{
+      $('.toast').toast('show')
+    }
   }
+
 }
 
-
-
-//Loading Major
-iframe.src = major_url
-hide_loading()
-
-
-
 setTimeout(function(){
+  //Loading Major
+  iframe.src = major_url
+  hide_loading()
   //Checking for update on-load
-  load_latest(minors[0],minors[1])
+  load_latest(minors[0],minors[1],true)
   clearTimeout()
-},100)
+},1000)
 
 //Keep checking for new minor release
 setInterval(function(){
   console.log("Update interval fired")
-  load_latest(minors[0],minors[1])
- },60000)
+  load_latest(minors[0],minors[1],false)
+ },30000)
+
+
